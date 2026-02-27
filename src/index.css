@@ -1,0 +1,172 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:wght@400;600;700&display=swap');
+
+:root {
+  /* Premium Coffee Palette */
+  --color-primary-dark: #3E2723;
+  /* Espresso */
+  --color-primary: #5D4037;
+  /* Mocha */
+  --color-primary-light: #8D6E63;
+  /* Latte */
+
+  --color-accent: #D7CCC8;
+  /* Foam / Beige */
+  --color-gold: #C5A059;
+  /* Luxury Gold */
+
+  --color-bg-light: #FAFAF5;
+  /* Cream White */
+  --color-bg-paper: #FFFFFF;
+  /* Pure White */
+
+  --color-text-main: #2C1B18;
+  --color-text-secondary: #5D4037;
+  --color-text-light: #8D6E63;
+
+  /* UI Essentials */
+  --shadow-sm: 0 4px 6px -1px rgba(62, 39, 35, 0.05);
+  --shadow-md: 0 10px 15px -3px rgba(62, 39, 35, 0.08);
+  --shadow-lg: 0 20px 25px -5px rgba(62, 39, 35, 0.1);
+  --shadow-glow: 0 0 15px rgba(197, 160, 89, 0.3);
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  /* Fonts */
+  --font-heading: 'Playfair Display', serif;
+  --font-body: 'Lato', sans-serif;
+
+  /* Transitions */
+  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark Mode */
+[data-theme='dark'] {
+  --color-bg-light: #121212;
+  --color-bg-paper: #1E1E1E;
+  --color-text-main: #EFEBE9;
+  --color-text-secondary: #BCAAA4;
+  --color-text-light: #8D6E63;
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* smooth scroll for anchor links */
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-bg-light);
+  color: var(--color-text-main);
+  line-height: 1.6;
+  overflow-x: hidden;
+  transition: background-color var(--transition-smooth), color var(--transition-smooth);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  color: var(--color-text-main);
+  line-height: 1.2;
+}
+
+/* Utilities */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 24px;
+  }
+}
+
+/* Responsive Grid */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .menu-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Typography Scale */
+h2 {
+  font-size: 1.75rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+  }
+}
+
+/* Interactive Elements */
+button,
+a {
+  min-height: 44px;
+  /* Standard touch target */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Utility Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+/* Optimize image loading */
+img {
+  content-visibility: auto;
+}
