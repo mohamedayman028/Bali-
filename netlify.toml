@@ -3,14 +3,18 @@
   publish = "dist"
 
 [functions]
-  # بنعرف نيتليفي إن ملفات السيرفر موجودة هنا
   directory = "api"
   node_bundler = "esbuild"
 
 [[redirects]]
-  # أي طلب للمنيو يروح لفولدر الـ api
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to = "/.netlify/functions/index/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api"
+  to = "/.netlify/functions/index"
   status = 200
   force = true
 
