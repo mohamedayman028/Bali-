@@ -74,10 +74,8 @@ export const handler = async (event, context) => {
       parts.shift();
       p = '/' + parts.join('/');
     }
-    // Remove "/api" prefix (common redirect)
-    if (p === '/api' || p.startsWith('/api/')) {
-      p = p === '/api' ? '/' : p.slice(4);
-    }
+    // Keep "/api" prefix intact so Express routes (which use /api/*)
+    // continue to match. Do not strip '/api'.
     event.path = p || '/';
   }
 
