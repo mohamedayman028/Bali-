@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { join } from 'path';
+import path from 'path';
+import sqlite3 from 'sqlite3';
+import serverless from 'serverless-http';
 import { runImageUpdate } from './update_images.js';
 
 dotenv.config();
