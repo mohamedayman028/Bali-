@@ -1,6 +1,7 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "api"
 
 [functions]
   directory = "api"
@@ -22,3 +23,4 @@
   from = "/*"
   to = "/index.html"
   status = 200
+  force = true
