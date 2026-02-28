@@ -27,7 +27,7 @@ const schemaPath = candidateSchemaPaths.find(p => fs.existsSync(p)) || resolvePa
 
 // Initialize sql.js (WASM-backed JS SQLite) and expose a sqlite3-compatible wrapper
 let sqlDb = null;
-let exportedDb = {
+export let db = {
     all(_sql, _params, cb) { cb && cb(new Error('DB not initialized')); },
     get(_sql, _params, cb) { cb && cb(new Error('DB not initialized')); },
     exec(_sql, cb) { cb && cb(new Error('DB not initialized')); }
@@ -79,7 +79,7 @@ export async function initDb() {
             }
         }
 
-        exportedDb = {
+        db = {
             all(sql, params = [], cb) {
                 try {
                     const res = sqlDb.exec(sql);
@@ -149,14 +149,16 @@ export async function initDb() {
             console.error('Error checking/seed database:', e.message || e);
         }
 
-        return exportedDb;
+        return db;
     } catch (err) {
         console.error('Failed to initialize sql.js-based DB wrapper:', err);
-        exportedDb = {
+        db = {
             all(_sql, _params, cb) { cb && cb(new Error('DB not available')); },
             get(_sql, _params, cb) { cb && cb(new Error('DB not available')); },
             exec(_sql, cb) { cb && cb(new Error('DB not available')); }
         };
-        return exportedDb;
+        return db;
     }
 }
+
+export default db;

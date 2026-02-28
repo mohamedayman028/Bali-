@@ -12,7 +12,7 @@ dotenv.config();
 process.env.DB_PATH = process.env.DB_PATH || join(process.cwd(), 'server', 'bali.db');
 
 // Import DB helpers (call initDb() before using in serverless runtime)
-import db, { DB_PATH, initDb } from './db.js';
+import { db, DB_PATH, initDb } from './db.js';
 
 const app = express();
 const PORT = 5001;
