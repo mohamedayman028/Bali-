@@ -30,7 +30,12 @@ export const handler = async (event, context) => {
     console.error('Database file not found. Tried:', { preferredDb, fallbackDb });
     return {
       statusCode: 502,
-      body: JSON.stringify({ error: 'Database file not found', tried: { preferredDb, fallbackDb }, listings })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        error: 'Database file not found',
+        tried: { preferredDb, fallbackDb },
+        listings
+      })
     };
   }
 
@@ -39,14 +44,26 @@ export const handler = async (event, context) => {
   process.env.DB_OPEN_MODE = 'READONLY';
   console.log('api/index.js: using DB at', process.env.DB_PATH);
 
-  // Normalize the incoming path from Netlify (strip function mount prefix)
-  if (event && event.path && event.path.startsWith('/.netlify/functions/')) {
-    const parts = event.path.split('/').filter(Boolean);
-    const fnIndex = parts.indexOf('.netlify');
-    if (fnIndex !== -1) {
-      const newPath = '/' + parts.slice(fnIndex + 2).join('/');
-      event.path = newPath === '/' ? '/' : newPath;
+  // Normalize the incoming path from Netlify:
+  // - Strip "/.netlify/functions/<fnName>" if present
+  // - Also strip a leading "/api" when using redirects that map /api/* -> /.netlify/functions/index/:splat
+  if (event && typeof event.path === 'string') {
+    // Prefer rawPath if available (some runtimes provide both)
+    let p = event.rawPath || event.path || '';
+    // Remove /.netlify/functions/<name> prefix if present
+    const nfPrefix = '/.netlify/functions/';
+    if (p.startsWith(nfPrefix)) {
+      // remove "/.netlify/functions/<name>" (keep any trailing path)
+      const parts = p.slice(nfPrefix.length).split('/');
+      // parts[0] is function name (e.g., "index"), rest is path
+      parts.shift();
+      p = '/' + parts.join('/');
     }
+    // Remove "/api" prefix (common redirect)
+    if (p === '/api' || p.startsWith('/api/')) {
+      p = p === '/api' ? '/' : p.slice(4);
+    }
+    event.path = p || '/';
   }
 
   try {
@@ -58,6 +75,7 @@ export const handler = async (event, context) => {
     console.error('Error initializing server or DB connection:', err);
     return {
       statusCode: 502,
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Server initialization failed', message: err?.message })
     };
   }
