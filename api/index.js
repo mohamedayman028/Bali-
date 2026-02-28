@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 export const handler = async (event, context) => {
   // Resolve DB path: prefer bundled relative path, fallback to process.cwd()
   const preferredDb = path.resolve(__dirname, '../server/bali.db');
-  const fallbackDb = path.join(process.cwd(), 'server', 'bali.db');
+  const fallbackDb = path.resolve(process.cwd(), 'server', 'bali.db');
 
   let resolvedDb = null;
   if (fs.existsSync(preferredDb)) resolvedDb = preferredDb;
@@ -43,6 +43,21 @@ export const handler = async (event, context) => {
   // Request read-only DB open mode for Netlify functions
   process.env.DB_OPEN_MODE = 'READONLY';
   console.log('api/index.js: using DB at', process.env.DB_PATH);
+
+  // Initialize the JS-based DB wrapper (sql.js) before loading the server
+  try {
+    const dbModule = await import('../server/db.js');
+    if (dbModule && typeof dbModule.initDb === 'function') {
+      await dbModule.initDb();
+    }
+  } catch (err) {
+    console.error('DB initialization failed:', err);
+    return {
+      statusCode: 502,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'DB initialization failed', message: err?.message })
+    };
+  }
 
   // Normalize the incoming path from Netlify:
   // - Strip "/.netlify/functions/<fnName>" if present

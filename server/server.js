@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import path from 'path';
-import sqlite3 from 'sqlite3';
 import serverless from 'serverless-http';
 import { runImageUpdate } from './update_images.js';
 
@@ -12,21 +11,33 @@ dotenv.config();
 // Ensure DB_PATH is set in the environment for Vercel and other hosts.
 process.env.DB_PATH = process.env.DB_PATH || join(process.cwd(), 'server', 'bali.db');
 
-// Import the DB after setting `process.env.DB_PATH` so `db.js` can honor it.
-const { default: db, DB_PATH } = await import('./db.js');
+// Import DB helpers (call initDb() before using in serverless runtime)
+import db, { DB_PATH, initDb } from './db.js';
 
 const app = express();
 const PORT = 5001;
 
 console.log('Using SQLite DB at:', DB_PATH);
 
-// Run image scan only in development/local
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-    runImageUpdate().then(() => {
-        console.log('Static image scan complete.');
-    }).catch(err => {
-        console.error('Initial image scan failed:', err);
-    });
+// Local startup helper: initialize DB and run image scan, then listen
+function startLocal() {
+    if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+        (async () => {
+            try {
+                await initDb();
+                runImageUpdate().then(() => {
+                    console.log('Static image scan complete.');
+                }).catch(err => {
+                    console.error('Initial image scan failed:', err);
+                });
+                app.listen(PORT, () => {
+                    console.log(`Server running on http://localhost:${PORT}`);
+                });
+            } catch (e) {
+                console.error('Failed to initialize DB for local server:', e);
+            }
+        })();
+    }
 }
 
 app.use(cors());
@@ -208,11 +219,7 @@ app.get('/api/tables', (req, res) => {
     });
 });
 
-// Local development server (disabled on Vercel)
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-    app.listen(PORT, () => {
-        console.log(`Server running on http://localhost:${PORT}`);
-    });
-}
+// Start local server initialization when running in development
+startLocal();
 
 export default app;
