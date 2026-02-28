@@ -29,8 +29,28 @@ function App() {
 
         const data = await res.json();
 
+        // normalize images and category types for frontend consumption
+        const normalizeImage = (img) => {
+          if (!img) return '';
+          try {
+            // absolute url or protocol-relative
+            if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('//')) return img;
+          } catch (e) {}
+          // ensure leading slash for local images
+          if (!img.startsWith('/')) return `/images/${encodeURIComponent(img)}`;
+          return img;
+        };
+
+        const products = (data.products || []).map(p => ({
+          ...p,
+          // some rows use `image` or `image_url` — prefer `image` then `image_url`
+          image: normalizeImage(p.image || p.image_url || ''),
+          // coerce category id to number when possible to match category ids from DB
+          category: (typeof p.category === 'string' && p.category !== 'all' && !isNaN(p.category)) ? Number(p.category) : p.category
+        }));
+
         setCategories(data.categories || []);
-        setProducts(data.products || []);
+        setProducts(products);
         setTables(data.tables || []);
       } catch (err) {
         console.error('Error fetching data:', err);
