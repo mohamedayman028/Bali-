@@ -7,6 +7,7 @@
   directory = "api"
   node_bundler = "esbuild"
   external_node_modules = ["sqlite3"]
+  included_files = ["server/**", "api/**", "node_modules/sql.js/dist/**/*.wasm"]
  
  [[redirects]]
    from = "/api/*"

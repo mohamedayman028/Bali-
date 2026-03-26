@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import sqlite3 from 'sqlite3';
+import { initDb, db as namedDb } from './db.js';
 
-const publicImagesDir = path.join(process.cwd(), '../public/images');
+const publicImagesDir = path.join(process.cwd(), 'public', 'images');
 
 // Build a lowercase filename -> real filename map of all images in /public/images/
 function buildImageMap() {
@@ -208,45 +208,44 @@ function getImageUrl(row) {
 }
 
 
-export function runImageUpdate() {
-    return new Promise((resolve, reject) => {
-        const db = new sqlite3.Database('bali.db');
+export async function runImageUpdate() {
+    try {
+        await initDb();
+        const db = namedDb;
 
-        db.all('SELECT id, name, image_url FROM products', (err, rows) => {
-            if (err) {
-                console.error(err);
-                db.close();
-                return reject(err);
-            }
-
-            // Clear uniqueness tracking for a fresh run
-            usedUnsplashIds.clear();
-
-            db.serialize(() => {
-                db.run('BEGIN TRANSACTION');
-                const stmt = db.prepare('UPDATE products SET image_url = ? WHERE id = ?');
-
-                rows.forEach(row => {
-                    const url = getImageUrl(row);
-                    stmt.run(url, row.id);
-                });
-
-                stmt.finalize();
-                db.run('COMMIT', (err) => {
-                    if (err) {
-                        console.error('Commit failed:', err);
-                        db.close();
-                        reject(err);
-                    } else {
-                        console.log(`Successfully updated ${rows.length} products. Local images prioritized.`);
-                        updateSeedFile();
-                        db.close();
-                        resolve();
-                    }
-                });
+        const rows = await new Promise((resolve, reject) => {
+            db.all('SELECT id, name, image_url FROM products', [], (err, rows) => {
+                if (err) return reject(err);
+                resolve(rows || []);
             });
         });
-    });
+
+        // Clear uniqueness tracking for a fresh run
+        usedUnsplashIds.clear();
+
+        // Build transaction SQL to update all rows
+        let tx = 'BEGIN TRANSACTION;\n';
+        for (const row of rows) {
+            const url = getImageUrl(row) || '';
+            const safeUrl = url.replace(/'/g, "''");
+            tx += `UPDATE products SET image_url = '${safeUrl}' WHERE id = ${row.id};\n`;
+        }
+        tx += 'COMMIT;\n';
+
+        await new Promise((resolve, reject) => {
+            db.exec(tx, (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+
+        console.log(`Successfully updated ${rows.length} products. Local images prioritized.`);
+        updateSeedFile();
+        return;
+    } catch (err) {
+        console.error('runImageUpdate failed:', err);
+        throw err;
+    }
 }
 
 // Support running directly or as a module

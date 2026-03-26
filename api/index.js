@@ -7,15 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const handler = async (event, context) => {
-  // Resolve DB path: prefer bundled relative path, fallback to process.cwd()
-  const preferredDb = path.resolve(__dirname, '../server/bali.db');
-  const fallbackDb = path.resolve(process.cwd(), 'server', 'bali.db');
+  // Resolve DB path
+  const resolvedDb = path.join(process.cwd(), 'server', 'bali.db');
 
-  let resolvedDb = null;
-  if (fs.existsSync(preferredDb)) resolvedDb = preferredDb;
-  else if (fs.existsSync(fallbackDb)) resolvedDb = fallbackDb;
-
-  if (!resolvedDb) {
+  if (!fs.existsSync(resolvedDb)) {
     // DB missing — return helpful directory listings for debugging on Netlify
     const tryDirs = [__dirname, process.cwd(), path.join(process.cwd(), 'server')];
     const listings = {};
@@ -27,13 +22,13 @@ export const handler = async (event, context) => {
       }
     }
 
-    console.error('Database file not found. Tried:', { preferredDb, fallbackDb });
+    console.error('Database file not found. Tried:', { resolvedDb });
     return {
       statusCode: 502,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         error: 'Database file not found',
-        tried: { preferredDb, fallbackDb },
+        tried: { resolvedDb },
         listings
       })
     };
@@ -74,8 +69,10 @@ export const handler = async (event, context) => {
       parts.shift();
       p = '/' + parts.join('/');
     }
-    // Keep "/api" prefix intact so Express routes (which use /api/*)
-    // continue to match. Do not strip '/api'.
+    // Remove "/api" prefix (common redirect)
+    if (p === '/api' || p.startsWith('/api/')) {
+      p = p === '/api' ? '/' : p.slice(4);
+    }
     event.path = p || '/';
   }
 

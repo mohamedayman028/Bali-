@@ -36,7 +36,7 @@ export let db = {
 export const DB_PATH = dbPath;
 
 export async function initDb() {
-    if (sqlDb) return exportedDb; // already initialized
+    if (sqlDb) return db; // already initialized
 
     try {
         const initSqlJsModule = await import('sql.js');
